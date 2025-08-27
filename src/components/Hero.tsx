@@ -1,77 +1,85 @@
-import { Button } from "../components/ui/button";
-import { ArrowRight, Play, Users, Award, Clock } from "lucide-react";
+import React from 'react';
+import { ArrowRight, Star, Users, Award } from 'lucide-react';
 
-const Hero = () => {
+interface HeroProps {
+  onGetStarted: () => void;
+}
+
+export function Hero({ onGetStarted }: HeroProps) {
   return (
-    <section className="pt-24 pb-16 bg-gradient-to-br from-background via-background to-secondary/20">
-      <div className="container mx-auto px-4">
+    <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 text-white">
+      <div className="absolute inset-0 bg-black opacity-20"></div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl lg:text-6xl font-bold text-foreground leading-tight">
-                Master <span className="bg-gradient-primary bg-clip-text text-transparent">Technical Skills</span> for Tomorrow
+            <div>
+              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+                Master Technical Skills at
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                  SATCOM TECHNOLOG
+                </span>
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Join SATCOM TECHNOLOG for comprehensive technical training in electronics, computers, 
-                and industrial equipment. Get hands-on experience with industry-standard equipment.
+              <p className="text-xl text-blue-100 mt-6 leading-relaxed">
+                Join Egypt's premier technical education center. Learn from industry experts 
+                and gain practical skills in electronics, telecommunications, and advanced technology.
               </p>
             </div>
-            
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                Explore Courses
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button variant="outline" size="lg">
-                <Play className="w-5 h-5 mr-2" />
-                Watch Demo
-              </Button>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={onGetStarted}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
+              >
+                <span>Start Learning Today</span>
+                <ArrowRight className="h-5 w-5" />
+              </button>
+              <button className="border-2 border-white hover:bg-white hover:text-blue-900 text-white px-8 py-4 rounded-lg font-semibold transition-all">
+                View Courses
+              </button>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-8 pt-8">
               <div className="text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-tech-blue/20 rounded-lg mb-2 mx-auto">
-                  <Users className="w-6 h-6 text-tech-blue" />
+                <div className="flex items-center justify-center mb-2">
+                  <Users className="h-8 w-8 text-yellow-400" />
                 </div>
-                <div className="text-2xl font-bold text-foreground">500+</div>
-                <div className="text-sm text-muted-foreground">Students</div>
+                <div className="text-2xl font-bold">5000+</div>
+                <div className="text-sm text-blue-200">Students</div>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-tech-green/20 rounded-lg mb-2 mx-auto">
-                  <Award className="w-6 h-6 text-tech-green" />
+                <div className="flex items-center justify-center mb-2">
+                  <Award className="h-8 w-8 text-yellow-400" />
                 </div>
-                <div className="text-2xl font-bold text-foreground">7</div>
-                <div className="text-sm text-muted-foreground">Departments</div>
+                <div className="text-2xl font-bold">15+</div>
+                <div className="text-sm text-blue-200">Years Experience</div>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-tech-orange/20 rounded-lg mb-2 mx-auto">
-                  <Clock className="w-6 h-6 text-tech-orange" />
+                <div className="flex items-center justify-center mb-2">
+                  <Star className="h-8 w-8 text-yellow-400" />
                 </div>
-                <div className="text-2xl font-bold text-foreground">95%</div>
-                <div className="text-sm text-muted-foreground">Success Rate</div>
+                <div className="text-2xl font-bold">98%</div>
+                <div className="text-sm text-blue-200">Success Rate</div>
               </div>
             </div>
           </div>
-          
+
           <div className="relative">
-            <div className="relative bg-gradient-secondary rounded-2xl p-8 shadow-elevated">
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-tech-orange/20 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-tech-blue/20 rounded-full blur-xl"></div>
-              <div className="relative bg-card rounded-xl p-6 border border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Student Dashboard Preview</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm text-foreground">Computer Maintenance</span>
-                    <div className="w-16 h-2 bg-tech-green rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm text-foreground">Cell Phone Repair</span>
-                    <div className="w-12 h-2 bg-tech-blue rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm text-foreground">Electrical Installation</span>
-                    <div className="w-8 h-2 bg-tech-orange rounded-full"></div>
-                  </div>
+            <div className="bg-white rounded-xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-transform duration-300">
+              <img
+                src="https://images.pexels.com/photos/3862132/pexels-photo-3862132.jpeg?auto=compress&cs=tinysrgb&w=600"
+                alt="Technical Training"
+                className="w-full h-64 object-cover rounded-lg"
+              />
+              <div className="mt-6">
+                <h3 className="text-xl font-bold text-gray-900">Hands-On Learning</h3>
+                <p className="text-gray-600 mt-2">
+                  State-of-the-art labs with real equipment for practical experience
+                </p>
+                <div className="flex items-center mt-4 space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                  <span className="text-sm text-gray-500 ml-2">Excellent Training</span>
                 </div>
               </div>
             </div>
@@ -80,6 +88,4 @@ const Hero = () => {
       </div>
     </section>
   );
-};
-
-export default Hero;
+}

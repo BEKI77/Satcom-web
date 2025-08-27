@@ -1,50 +1,89 @@
-import { Button } from "../components/ui/button";
-import { BookOpen, Users, Settings, LogIn } from "lucide-react";
+import React from 'react';
+import { User, Settings, Home, BookOpen, Users, LogOut } from 'lucide-react';
+import { User as UserType } from '../types';
 
-const Header = () => {
+interface HeaderProps {
+  user: UserType | null;
+  onLogin: () => void;
+  onLogout: () => void;
+  onNavigate: (view: 'home' | 'dashboard' | 'course' | 'admin') => void;
+  currentView: string;
+}
+
+export function Header({ user, onLogin, onLogout, onNavigate, currentView }: HeaderProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-sm border-b border-border">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">SATCOM TECHNOLOG</h1>
-              <p className="text-sm text-muted-foreground">Technical Training Institute</p>
+    <header className="bg-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center py-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate('home')}>
+              <Settings className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">SATCOM TECHNOLOG</h1>
+                <p className="text-sm text-gray-500">Technical Education Center</p>
+              </div>
             </div>
           </div>
-          
-          <nav className="hidden md:flex items-center space-x-8">
-            <a href="#courses" className="text-foreground hover:text-primary transition-colors">
-              Courses
-            </a>
-            <a href="#about" className="text-foreground hover:text-primary transition-colors">
-              About
-            </a>
-            <a href="#dashboard" className="text-foreground hover:text-primary transition-colors">
-              Dashboard
-            </a>
-            <a href="#contact" className="text-foreground hover:text-primary transition-colors">
-              Contact
-            </a>
+
+          <nav className="hidden md:flex space-x-8">
+            {currentView !== 'home' && user && (
+              <>
+                <button
+                  onClick={() => onNavigate('home')}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('dashboard')}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </button>
+                {user.role === 'admin' && (
+                  <button
+                    onClick={() => onNavigate('admin')}
+                    className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Admin</span>
+                  </button>
+                )}
+              </>
+            )}
           </nav>
-          
+
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <Users className="w-4 h-4 mr-2" />
-              Student Portal
-            </Button>
-            <Button variant="default" size="sm">
-              <LogIn className="w-4 h-4 mr-2" />
-              Sign In
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-2">
+                  <User className="h-5 w-5 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                  {user.role === 'admin' && (
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Admin</span>
+                  )}
+                </div>
+                <button
+                  onClick={onLogout}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onLogin}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Login / Register
+              </button>
+            )}
           </div>
         </div>
       </div>
     </header>
   );
-};
-
-export default Header;
+}
