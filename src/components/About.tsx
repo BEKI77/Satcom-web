@@ -17,13 +17,12 @@ export function About() {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              About SATCOM TECHNOLOG
+              About SATCOM College
             </h2>
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              Since 2008, SATCOM TECHNOLOG has been Egypt's leading technical education center, 
-              providing comprehensive training in electronics, telecommunications, and advanced 
-              technology fields. Located in the heart of Cairo, we've trained over 5,000 students 
-              who are now working successfully in various technical industries.
+              Established in 2008, SATCOM College is Ethiopia's premier institution for technical education, 
+              offering comprehensive programs in electronics, telecommunications, and modern technology fields. 
+              Located in the heart of Addis Ababa, we have empowered thousands of students to excel in diverse technical careers across Ethiopia and beyond.
             </p>
 
             <div className="space-y-4 mb-8">
@@ -40,14 +39,14 @@ export function About() {
                 <MapPin className="h-5 w-5 text-blue-600" />
                 <div>
                   <p className="font-semibold text-gray-900">Location</p>
-                  <p className="text-sm">Piazza Megenagna, Cairo</p>
+                  <p className="text-sm">Megenagna, Addis Ababa</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 text-gray-600">
                 <Phone className="h-5 w-5 text-blue-600" />
                 <div>
                   <p className="font-semibold text-gray-900">Contact</p>
-                  <p className="text-sm">091382 7979</p>
+                  <p className="text-sm">+251 91 234 5678</p>
                 </div>
               </div>
             </div>

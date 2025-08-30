@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, Star, Users, Award } from 'lucide-react';
 
 interface HeroProps {
@@ -20,7 +19,7 @@ export function Hero({ onGetStarted }: HeroProps) {
                 </span>
               </h1>
               <p className="text-xl text-blue-100 mt-6 leading-relaxed">
-                Join Egypt's premier technical education center. Learn from industry experts 
+                Join our premier technical education center. Learn from industry experts 
                 and gain practical skills in electronics, telecommunications, and advanced technology.
               </p>
             </div>
