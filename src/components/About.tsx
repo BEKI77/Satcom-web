@@ -1,5 +1,4 @@
-import React from 'react';
-import { MapPin, Phone, Clock, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, CheckCircle } from 'lucide-react';
 
 export function About() {
   const features = [
