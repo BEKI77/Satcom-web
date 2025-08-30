@@ -13,19 +13,19 @@ export function Hero({ onGetStarted }: HeroProps) {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div>
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+              <h1 className="text-xl lg:text-5xl font-bold leading-tight">
                 Master Technical Skills at
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
                   SATCOM TECHNOLOG
                 </span>
               </h1>
-              <p className="text-xl text-blue-100 mt-6 leading-relaxed">
+              <p className="text-md text-blue-100 mt-6 leading-relaxed">
                 Join Egypt's premier technical education center. Learn from industry experts 
                 and gain practical skills in electronics, telecommunications, and advanced technology.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 ">
               <button
                 onClick={onGetStarted}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
