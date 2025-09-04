@@ -159,9 +159,11 @@ function App() {
       
       {showAuth && (
         <AuthModal
-          onClose={() => setShowAuth(false)}
-          onLogin={handleLogin}
-          onRegister={handleRegister}
+          onAuthSuccess={(user) => {
+            setCurrentUser(user);
+            setShowAuth(false);
+            setCurrentView(user.role === 'admin' ? 'admin': 'dashboard');
+          }}
         />
       )}
     </div>

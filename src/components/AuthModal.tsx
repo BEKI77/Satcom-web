@@ -1,155 +1,66 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { createClient, Session } from '@supabase/supabase-js';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+
+console.log(import.meta.env.VITE_SUPABASE_URL,import.meta.env.VITE_SUPABASE_SECRET_KEY);
+
+const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_SECRET_KEY);
 
 interface AuthModalProps {
-  onClose: () => void;
-  onLogin: (email: string, password: string) => void;
-  onRegister: (name: string, email: string, password: string) => void;
+  onAuthSuccess: (user: any) => void;
 }
 
-export function AuthModal({ onClose, onLogin, onRegister }: AuthModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+export function AuthModal({ onAuthSuccess }: AuthModalProps) {
+  const [session, setSession] = useState<Session | null>(null)
+ 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session)
+      })
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session)
+      })
+
+      return () => subscription.unsubscribe()
+
+    }, []);
+   
+  useEffect(() => {
+    if (session) {
+      // Map Supabase session to your app's User type
+      const user = session.user;
+      const email = user.email ?? '';
+      const name = user.user_metadata.full_name ?? email.split('@')[0];
+      const role = email.includes('admin') ? 'admin' : 'student'; // Example role logic
+
+      onAuthSuccess({
+        id: user.id,
+        name,
+        email,
+        role,
+        enrolledCourses: [],
+        completedCourses: [],
+        avatar: user.user_metadata.avatar_url,
+      });
     
-    if (isLogin) {
-      onLogin(formData.email, formData.password);
-    } else {
-      if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match!');
-        return;
-      }
-      onRegister(formData.name, formData.email, formData.password);
     }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
+  }, [session, onAuthSuccess]);
+  
+  if (!session) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} providers={['google']}/>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  required={!isLogin}
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Enter your email"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Enter your password"
-              />
-            </div>
-          </div>
-
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required={!isLogin}
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Confirm your password"
-                />
-              </div>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6"
-          >
-            {isLogin ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="p-6 pt-0">
-          <p className="text-center text-gray-600">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-blue-600 hover:text-blue-700 font-semibold ml-2"
-            >
-              {isLogin ? 'Sign Up' : 'Sign In'}
-            </button>
-          </p>
-
-          {isLogin && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Demo Accounts:</strong>
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                Student: student@demo.com | Admin: admin@demo.com<br />
-                Password: any password works
-              </p>
-            </div>
-          )}
-        </div>
+     
       </div>
-    </div>
-  );
+    )
+  }else {
+    return null;
+  }
 }
