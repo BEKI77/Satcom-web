@@ -1,4 +1,3 @@
-import React from 'react';
 import * as Icons from 'lucide-react';
 import { Department } from '../types';
 
@@ -26,7 +25,7 @@ export function Departments({ departments }: DepartmentsProps) {
             
             return (
               <div
-                key={department.id}
+                key={index}
                 className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group"
               >
                 <div className={`${department.color} h-2`}></div>

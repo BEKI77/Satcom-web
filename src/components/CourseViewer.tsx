@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Play, FileText, CheckCircle, Clock, User, Star } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Play, FileText, CheckCircle, Clock, User } from 'lucide-react';
 import { Course, Module } from '../types';
 
 interface CourseViewerProps {

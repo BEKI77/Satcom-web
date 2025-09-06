@@ -2,9 +2,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'admin';
-  enrolledCourses: string[];
-  completedCourses: string[];
+  role: string | null;
+  enrolledCourses: string[]|null;
+  completedCourses: string[]|null;
 }
 
 export interface Course {

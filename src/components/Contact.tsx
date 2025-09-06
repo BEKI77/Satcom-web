@@ -12,7 +12,6 @@ export function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
     console.log('Form submitted:', formData);
     alert('Thank you for your inquiry! We will contact you soon.');
     setFormData({ name: '', email: '', phone: '', course: '', message: '' });

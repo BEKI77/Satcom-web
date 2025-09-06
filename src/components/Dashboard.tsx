@@ -1,5 +1,4 @@
-import React from 'react';
-import { BookOpen, Clock, Award, TrendingUp, Play, FileText, Users } from 'lucide-react';
+import { BookOpen, Clock, Award, TrendingUp, Play, Users } from 'lucide-react';
 import { User, Course } from '../types';
 import { courses } from '../data';
 
@@ -15,8 +14,7 @@ export function Dashboard({ user, enrolledCourses, courseProgress, onViewCourse,
   const enrolledCourseObjects = courses.filter(course => enrolledCourses.includes(course.id));
   const availableCourses = courses.filter(course => !enrolledCourses.includes(course.id));
   const completedCourses = enrolledCourses.filter(courseId => courseProgress[courseId] >= 100);
-  const totalProgress = enrolledCourses.length > 0 
-    ? Math.round(enrolledCourses.reduce((sum, courseId) => sum + (courseProgress[courseId] || 0), 0) / enrolledCourses.length)
+  const totalProgress = enrolledCourses.length > 0 ? Math.round(enrolledCourses.reduce((sum, courseId) => sum + (courseProgress[courseId] || 0), 0) / enrolledCourses.length)
     : 0;
 
   return (

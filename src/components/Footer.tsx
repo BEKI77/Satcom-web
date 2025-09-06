@@ -1,4 +1,3 @@
-import React from 'react';
 import { Settings, MapPin, Phone, Mail, Clock } from 'lucide-react';
 
 export function Footer() {
@@ -10,22 +9,25 @@ export function Footer() {
             <div className="flex items-center space-x-2 mb-6">
               <Settings className="h-8 w-8 text-blue-400" />
               <div>
-                <h3 className="text-xl font-bold">SATCOM TECHNOLOG</h3>
+                <h3 className="text-xl font-bold">SATCOM TECHNOLOGY</h3>
                 <p className="text-gray-400 text-sm">Technical Education Center</p>
               </div>
             </div>
             <p className="text-gray-300 leading-relaxed mb-6">
-              Leading technical education institute in Egypt, providing comprehensive training 
-              in electronics, telecommunications, and advanced technology since 2008.
+              Leading technical education institute, providing comprehensive training 
+              in electronics, telecommunications, and advanced technology.
             </p>
             <div className="space-y-2">
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">Piazza Megenagna, Cairo, Egypt</span>
+                <span className="text-gray-300">Piazza Megenagna</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">091382 7979 / 0913 87 70 70</span>
+                <div className='flex flex-col'>
+                  <span className="text-gray-300">0913827979</span>
+                  <span className="text-gray-300">0913877070</span>
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-blue-400" />
@@ -64,10 +66,6 @@ export function Footer() {
               <div className="text-gray-300">
                 <p>Saturday - Thursday</p>
                 <p className="text-blue-400">9:00 AM - 6:00 PM</p>
-              </div>
-              <div className="text-gray-300">
-                <p>Friday</p>
-                <p className="text-red-400">Closed</p>
               </div>
             </div>
           </div>
