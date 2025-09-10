@@ -1,20 +1,23 @@
-import { BookOpen, Clock, Award, TrendingUp, Play, Users } from 'lucide-react';
-import { User, Course } from '../types';
+import { Link } from 'react-router-dom';
+import { BookOpen, Clock, Award, TrendingUp, Play, Users, Star } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 import { courses } from '../data';
+import { useProfile } from '@/context/profile- context';
 
-interface DashboardProps {
-  user: User;
-  enrolledCourses: string[];
-  courseProgress: Record<string, number>;
-  onViewCourse: (course: Course) => void;
-  onEnrollCourse: (courseId: string) => void;
-}
+export function DashboardPage() {
+  const { user } = useAuth();
+  const {enrolledCourses, enrollInCourse, courseProgress } = useProfile();
 
-export function Dashboard({ user, enrolledCourses, courseProgress, onViewCourse, onEnrollCourse }: DashboardProps) {
+  if (!user || !courseProgress) return null;
+
+  // Call courseProgress if it's a function
+  const progressObj: Record<string, number> = typeof courseProgress === 'function' ? {} : courseProgress;
+
   const enrolledCourseObjects = courses.filter(course => enrolledCourses.includes(course.id));
   const availableCourses = courses.filter(course => !enrolledCourses.includes(course.id));
-  const completedCourses = enrolledCourses.filter(courseId => courseProgress[courseId] >= 100);
-  const totalProgress = enrolledCourses.length > 0 ? Math.round(enrolledCourses.reduce((sum, courseId) => sum + (courseProgress[courseId] || 0), 0) / enrolledCourses.length)
+  const completedCourses = enrolledCourses.filter(courseId => progressObj && progressObj[courseId] >= 100);
+  const totalProgress = enrolledCourses.length > 0 
+    ? Math.round(enrolledCourses.reduce((sum, courseId) => sum + ((progressObj && progressObj[courseId]) || 0), 0) / enrolledCourses.length)
     : 0;
 
   return (
@@ -74,43 +77,58 @@ export function Dashboard({ user, enrolledCourses, courseProgress, onViewCourse,
         <div className="grid lg:grid-cols-3 gap-8">
           {/* My Courses */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">My Courses</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">My Courses</h2>
+              <Link
+                to="/courses"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Browse All Courses →
+              </Link>
+            </div>
             
             {enrolledCourseObjects.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">
                 <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No courses enrolled yet</h3>
                 <p className="text-gray-600 mb-4">Start your learning journey by enrolling in a course</p>
+                <Link
+                  to="/courses"
+                  className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Browse Courses</span>
+                </Link>
               </div>
             ) : (
               <div className="space-y-4">
                 {enrolledCourseObjects.map(course => {
-                  const progress = courseProgress[course.id] || 0;
+                  const progress = progressObj[course.id] || 0;
                   return (
                     <div key={course.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                       <div className="flex items-start space-x-4">
                         <img
                           src={course.thumbnail}
                           alt={course.title}
-                          className="w-16 h-16 object-cover rounded-lg"
+                          className="w-20 h-20 object-cover rounded-lg"
                         />
                         <div className="flex-1">
                           <div className="flex items-start justify-between">
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900 mb-1">{course.title}</h3>
-                              <p className="text-gray-600 text-sm mb-2">{course.description}</p>
+                              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{course.description}</p>
                               <div className="flex items-center space-x-4 text-sm text-gray-500">
                                 <span className="flex items-center"><Users className="h-4 w-4 mr-1" />{course.instructor}</span>
                                 <span className="flex items-center"><Clock className="h-4 w-4 mr-1" />{course.duration}</span>
                               </div>
                             </div>
-                            <button
-                              onClick={() => onViewCourse(course)}
+                            <Link
+                              to={`/learn/${course.id}`}
                               className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
                             >
                               <Play className="h-4 w-4" />
                               <span>Continue</span>
-                            </button>
+                            </Link>
                           </div>
                           
                           <div className="mt-4">
@@ -134,9 +152,9 @@ export function Dashboard({ user, enrolledCourses, courseProgress, onViewCourse,
             )}
           </div>
 
-          {/* Available Courses */}
+          {/* Recommended Courses */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Courses</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recommended for You</h2>
             <div className="space-y-4">
               {availableCourses.slice(0, 4).map(course => (
                 <div key={course.id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
@@ -147,11 +165,25 @@ export function Dashboard({ user, enrolledCourses, courseProgress, onViewCourse,
                   />
                   <h3 className="font-semibold text-gray-900 mb-1">{course.title}</h3>
                   <p className="text-sm text-gray-600 mb-2">{course.instructor}</p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-1">4.8</span>
+                    </div>
                     <span className="text-lg font-bold text-blue-600">${course.price}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition-colors text-center"
+                    >
+                      Details
+                    </Link>
                     <button
-                      onClick={() => onEnrollCourse(course.id)}
-                      className="bg-green-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                      onClick={() => enrollInCourse(course.id)}
+                      className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
                     >
                       Enroll
                     </button>

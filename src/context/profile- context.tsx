@@ -1,0 +1,141 @@
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from './auth-context';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_SECRET_KEY
+);
+
+interface Profile {
+  id: string;
+  bio: string | null;
+  website: string | null;
+  // Add more fields as needed
+}
+
+interface ProfileContextType {
+  profile: Profile | null;
+  loading: boolean;
+  enrolledCourses: string[];
+  enrollInCourse: (courseId: string) => Promise<void>;
+  courseProgress: ()=> Promise<Record<string, number> | null>;
+  updateProgress: (courseId: string, progress: number) => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+
+export const ProfileProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
+
+  const fetchProfile = async () => {
+    if (!user) {
+      setProfile(null);
+      setEnrolledCourses([]);
+      return;
+    }
+    setLoading(true);
+    // Fetch profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError.message);
+      setProfile(null);
+    } else {
+      setProfile(profileData);
+    }
+
+    // Fetch enrolled courses
+    const { data: enrollments, error: enrollmentsError } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .eq('user_id', user.id);
+
+    if (enrollmentsError) {
+      console.error('Error fetching enrollments:', enrollmentsError.message);
+      setEnrolledCourses([]);
+    } else {
+      setEnrolledCourses(enrollments.map((e: any) => e.course_id));
+    }
+    setLoading(false);
+  };
+
+  const enrollInCourse = async (courseId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('enrollments')
+      .insert([{ user_id: user.id, course_id: courseId }]);
+    if (error) {
+      console.error('Error enrolling in course:', error.message);
+    } else {
+      setEnrolledCourses(prev => [...prev, courseId]);
+    }
+  };
+
+  const courseProgress = async (): Promise<Record<string, number>> => {
+    if (!user) return {};
+    const { data, error } = await supabase
+      .from('course_progress')
+      .select('course_id, progress')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error fetching course progress:', error.message);
+      return {};
+    }
+
+    const progressMap: Record<string, number> = {};
+
+    data.forEach((row: { course_id: string; progress: number }) => {
+      progressMap[row.course_id] = row.progress;
+    });
+
+    return progressMap;
+  };
+
+   const updateProgress = async (courseId: string, progress: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('course_progress')
+      .upsert([
+        { user_id: user.id, course_id: courseId, progress }
+      ], { onConflict: 'user_id,course_id' });
+    if (error) {
+      console.error('Error updating course progress:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  return (
+    <ProfileContext.Provider value={{ 
+        profile, 
+        loading, 
+        enrolledCourses, 
+        enrollInCourse, 
+        courseProgress, 
+        updateProgress,
+        refreshProfile: fetchProfile }}>
+      {children}
+    </ProfileContext.Provider>
+  );
+};
+
+export const useProfile = () => {
+  const context = useContext(ProfileContext);
+  if (context === undefined) {
+    throw new Error('useProfile must be used within a ProfileProvider');
+  }
+  return context;
+};

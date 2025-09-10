@@ -1,128 +1,76 @@
-import { useState, useEffect } from 'react';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
-import { Departments } from './components/Departments';
-import { About } from './components/About';
-import { Contact } from './components/Contact';
-import { Footer } from './components/Footer';
-import { Dashboard } from './components/Dashboard';
-import { CourseViewer } from './components/CourseViewer';
-import { AdminPanel } from './components/AdminPanel';
-import { User, Course } from './types';
-import { departments } from './data';
-import { useAuth } from './context/auth-context';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/auth-context';
+import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+
+// Pages
+import { HomePage } from './pages/HomePage';
+import { AboutPage } from './pages/AboutPage';
+import { CoursesPage } from './pages/CoursesPage';
+import { ContactPage } from './pages/ContactPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { CourseDetailPage } from './pages/CourseDetailPage';
+import { CoursePlayerPage } from './pages/CoursePlayerPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { AdminPage } from './pages/AdminPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { ProfileProvider } from './context/profile- context';
 
 function App() {
-  const { user } = useAuth()
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'course' | 'admin'>('home');
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
-  const [courseProgress, setCourseProgress] = useState<Record<string, number>>({});
-
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('satcom_user');
-    const savedEnrollments = localStorage.getItem('satcom_enrollments');
-    const savedProgress = localStorage.getItem('satcom_progress');
-    
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-    if (savedEnrollments) {
-      setEnrolledCourses(JSON.parse(savedEnrollments));
-    }
-    if (savedProgress) {
-      setCourseProgress(JSON.parse(savedProgress));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('satcom_user', JSON.stringify(currentUser));
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem('satcom_enrollments', JSON.stringify(enrolledCourses));
-  }, [enrolledCourses]);
-
-  useEffect(() => {
-    localStorage.setItem('satcom_progress', JSON.stringify(courseProgress));
-  }, [courseProgress]);
-
-
-  const handleEnrollCourse = (courseId: string) => {
-    if (!enrolledCourses.includes(courseId)) {
-      setEnrolledCourses(prev => [...prev, courseId]);
-      setCourseProgress(prev => ({ ...prev, [courseId]: 0 }));
-    }
-  };
-
-  const handleViewCourse = (course: Course) => {
-    setSelectedCourse(course);
-    setCurrentView('course');
-  };
-
-  const updateProgress = (courseId: string, progress: number) => {
-    setCourseProgress(prev => ({ ...prev, [courseId]: progress }));
-  };
-
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return (
-          (user ? 
-            <Dashboard
-              user={user}
-              enrolledCourses={enrolledCourses}
-              courseProgress={courseProgress}
-              onViewCourse={handleViewCourse}
-              onEnrollCourse={handleEnrollCourse}
-            /> :
-            null
-          )
-        );
-      case 'course':
-        return selectedCourse ? (
-          <CourseViewer
-            course={selectedCourse}
-            progress={courseProgress[selectedCourse.id] || 0}
-            onUpdateProgress={updateProgress}
-            onBack={() => setCurrentView('dashboard')}
-          />
-        ) : null;
-      case 'admin':
-        return (
-          <AdminPanel
-            onBack={() => setCurrentView('dashboard')}
-          />
-        );
-      default:
-        return (
-          <>
-            <Hero onGetStarted={() => setShowAuth(true)} />
-            <Departments departments={departments} />
-            <About />
-            <Contact />
-          </>
-        );
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        user={currentUser}
-        onNavigate={setCurrentView}
-        currentView={currentView}
-      />
-      
-      {renderCurrentView()}
-      
-      {currentView === 'home' && <Footer />}
-    </div>
+    <AuthProvider>
+      <ProfileProvider>
+
+      <Router>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+          <Header />
+          
+          <main className="flex-1">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/courses" element={<CoursesPage />} />
+              <Route path="/courses/:id" element={<CourseDetailPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/learn/:courseId" element={
+                <ProtectedRoute>
+                  <CoursePlayerPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute adminOnly>
+                  <AdminPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+          
+          <Footer />
+        </div>
+      </Router>
+      </ProfileProvider>
+    </AuthProvider>
   );
 }
 

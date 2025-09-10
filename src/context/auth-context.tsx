@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { createClient, Session } from '@supabase/supabase-js';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { CustomAuth } from '@/components/auth/Custom-auth';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -21,8 +20,9 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => void;
-  logout: () => void;
+  signUp: (name:string, email:string, password: string) => Promise<void>;
+  login: (email:string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
 }
 
@@ -50,7 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (session) {
       const supaUser = session.user;
-    //   console.log(supaUser)
       const email = supaUser.email ?? '';
       const name = supaUser.user_metadata.full_name ?? email.split('@')[0];
       const role = email.includes('admin') ? 'admin' : 'student';
@@ -71,7 +70,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [session]);
 
-  const login = (userData: User) => setUser(userData);
+  const login = async (email:string, password:string ) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if(error) {
+      console.error(error.message);
+    } else{
+      console.log("Sign in successfull: ", data);
+      const supaUser = data.user;
+    //   console.log(supaUser)
+      const email = supaUser.email ?? '';
+      const name = supaUser.user_metadata.full_name ?? email.split('@')[0];
+      const role = email.includes('admin') ? 'admin' : 'student';
+
+      setUser({
+        id: supaUser.id,
+        name,
+        email,
+        role,
+        enrolledCourses: [],
+        completedCourses: [],
+        avatar: supaUser.user_metadata.avatar_url,
+      });
+    }
+
+  };
+
+  const signUp = async(email:string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {full_name: "User Name"}
+      }
+    });
+
+    if(error) {
+      console.error(error.message);
+    } else {
+      console.log('Sign up successful: ', data)
+    }
+  }
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -83,8 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signInWithOAuth({ provider: 'google' });
   };
 
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, login, signUp ,logout, loginWithGoogle }}>
       {loading ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 text-center">
@@ -92,11 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           </div>
         </div>
       ) : !user ? (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} providers={['google']} />
-          </div>
-        </div>
+        <CustomAuth onLogin={login} onSignUp={signUp} onGoogleLogin={loginWithGoogle} loading={loading} />
       ) : null}
       {children}
     </AuthContext.Provider>

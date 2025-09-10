@@ -1,17 +1,46 @@
-import { useState } from 'react';
-import { ArrowLeft, Play, FileText, CheckCircle, Clock, User } from 'lucide-react';
-import { Course, Module } from '../types';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Play, FileText, CheckCircle, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { courses } from '../data';
+import { useProfile } from '@/context/profile- context';
 
-interface CourseViewerProps {
-  course: Course;
-  progress: number;
-  onUpdateProgress: (courseId: string, progress: number) => void;
-  onBack: () => void;
-}
-
-export function CourseViewer({ course, progress, onUpdateProgress, onBack }: CourseViewerProps) {
+export function CoursePlayerPage() {
+  const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
+  const { courseProgress, updateProgress } = useProfile();
+  
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
+  const [progress, setProgress] = useState<number>(0);
+
+  const course = courses.find(c => c.id === courseId);
+  
+  React.useEffect(() => {
+    async function fetchProgress() {
+      if (course && courseProgress) {
+        const progressData = await courseProgress();
+        setProgress(progressData && progressData[course.id] ? progressData[course.id] : 0);
+      }
+    }
+    fetchProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course, courseProgress]);
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Course Not Found</h1>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const currentModule = course.modules[currentModuleIndex];
   const totalModules = course.modules.length;
@@ -23,7 +52,7 @@ export function CourseViewer({ course, progress, onUpdateProgress, onBack }: Cou
       setCompletedModules(newCompleted);
       
       const newProgress = (newCompleted.length / totalModules) * 100;
-      onUpdateProgress(course.id, newProgress);
+      updateProgress(course.id, newProgress);
     }
   };
 
@@ -39,7 +68,7 @@ export function CourseViewer({ course, progress, onUpdateProgress, onBack }: Cou
     }
   };
 
-  const renderModuleContent = (module: Module) => {
+  const renderModuleContent = (module: any) => {
     switch (module.type) {
       case 'video':
         return (
@@ -128,12 +157,16 @@ export function CourseViewer({ course, progress, onUpdateProgress, onBack }: Cou
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={onBack}
+                onClick={() => navigate('/dashboard')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
                 <span>Back to Dashboard</span>
               </button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">{course.title}</h1>
+                <p className="text-sm text-gray-500">Module {currentModuleIndex + 1} of {totalModules}</p>
+              </div>
             </div>
             <div className="flex items-center space-x-6">
               <div className="text-right">
@@ -226,7 +259,7 @@ export function CourseViewer({ course, progress, onUpdateProgress, onBack }: Cou
                   disabled={currentModuleIndex === 0}
                   className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                   <span>Previous</span>
                 </button>
 
@@ -247,7 +280,7 @@ export function CourseViewer({ course, progress, onUpdateProgress, onBack }: Cou
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
                     <span>Next</span>
-                    <Play className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>

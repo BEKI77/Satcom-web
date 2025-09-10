@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Users, BookOpen, BarChart3, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Edit, Trash2, Users, BookOpen, BarChart3, Settings } from 'lucide-react';
 import { courses, departments } from '../data';
 
-interface AdminPanelProps {
-  onBack: () => void;
-}
-
-export function AdminPanel({ onBack }: AdminPanelProps) {
+export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'users' | 'settings'>('overview');
 
   const tabs = [
@@ -297,26 +293,13 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-                <span>Back to Dashboard</span>
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+          <p className="text-gray-600">Manage your learning platform</p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="border-b border-gray-200">
