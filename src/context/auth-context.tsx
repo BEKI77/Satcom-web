@@ -12,9 +12,7 @@ interface User {
   name: string;
   email: string;
   role: string|null;
-  enrolledCourses: string[] | null;
-  completedCourses: string[];
-  avatar?: string;
+  avatar: string;
 }
 
 interface AuthContextType {
@@ -59,12 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name,
         email,
         role,
-        enrolledCourses: [],
-        completedCourses: [],
         avatar: supaUser.user_metadata.avatar_url,
       });
 
-      console.log(user);
     } else {
       setUser(null);
     }
@@ -91,8 +86,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name,
         email,
         role,
-        enrolledCourses: [],
-        completedCourses: [],
         avatar: supaUser.user_metadata.avatar_url,
       });
     }

@@ -1,12 +1,12 @@
 import  { useState } from 'react';
 import { User, Mail, Phone, MapPin, Edit, Save, X } from 'lucide-react';
-import { useAuth } from '../context/auth-context';
+import { useProfile } from '@/context/profile- context';
 
 export function ProfilePage() {
-  const { user } = useAuth();
+  const { profile: user } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.userName || '',
     email: user?.email || '',
     phone: '',
     address: '',
@@ -30,10 +30,18 @@ export function ProfilePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
+                  {user.avatar ?  
+                   <img
+                    src={user.avatar}
+                    alt="User Avatar"
+                    className="h-24 w-24 rounded-full object-cover"
+                  />:
                   <User className="h-12 w-12 text-blue-600" />
+                  }
+                 
                 </div>
                 <div className="text-white">
-                  <h1 className="text-3xl font-bold">{user.name}</h1>
+                  <h1 className="text-3xl font-bold">{user.userName}</h1>
                   <p className="text-blue-100">{user.email}</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mt-2 ${
                     user.role === 'admin' ? 'bg-red-500' : 'bg-green-500'
@@ -73,7 +81,7 @@ export function ProfilePage() {
                     ) : (
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                         <User className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-900">{user.name}</span>
+                        <span className="text-gray-900">{user.userName}</span>
                       </div>
                     )}
                   </div>
@@ -161,7 +169,7 @@ export function ProfilePage() {
                   </div>
                   <div className="bg-green-50 rounded-lg p-4">
                     <h3 className="font-semibold text-green-900">Completed Courses</h3>
-                    <p className="text-2xl font-bold text-green-600">{user.completedCourses.length}</p>
+                    <p className="text-2xl font-bold text-green-600">{user.completedCourses?.length}</p>
                   </div>
                   <div className="bg-orange-50 rounded-lg p-4">
                     <h3 className="font-semibold text-orange-900">Account Type</h3>

@@ -9,9 +9,22 @@ const supabase = createClient(
 
 interface Profile {
   id: string;
-  bio: string | null;
-  website: string | null;
-  // Add more fields as needed
+  userName: string;
+  email: string;
+  role: string;
+  avatar: string;
+  enrollmentDate?: string;
+  completedCourses?: string[];
+  currentCourses?: string[];
+  progress?: Record<string, number>;
+  badges?: string[];
+  certificates?: string[];
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+  };
+  phone?: string;
 }
 
 interface ProfileContextType {
@@ -28,6 +41,8 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+ 
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
@@ -46,7 +61,39 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
+    console.log(profileData);
+    if (profileError && profileError.code==='PGRST116') {
+      // Insert new profile
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: user.id,
+          userName: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          enrollmentDate: new Date().toISOString(),
+        }]);
+      if (insertError) {
+        console.error('Error inserting new profile:', insertError.message);
+        setProfile(null);
+      } else {
+        setProfile({
+          id: user.id,
+          userName: user.name,
+          email: user.email,
+          role: user.email.includes('admin') ? 'admin' : 'student',
+          avatar: user.avatar,
+          enrollmentDate: new Date().toISOString(),
+          completedCourses: [],
+          currentCourses: [],
+          progress: {},
+          badges: [],
+          certificates: [],
+          socialLinks: {},
+          phone: '',
+        });
+      }
+    } else if (profileError) {
       console.error('Error fetching profile:', profileError.message);
       setProfile(null);
     } else {
