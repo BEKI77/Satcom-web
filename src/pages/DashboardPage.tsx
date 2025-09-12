@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, Award, TrendingUp, Play, Users, Star } from 'lucide-react';
-import { useAuth } from '@/context/auth-context';
 import { courses } from '../data';
 import { useProfile } from '@/context/profile- context';
 
 export function DashboardPage() {
-  const { user } = useAuth();
-  const {enrolledCourses, enrollInCourse, courseProgress } = useProfile();
+  const {profile: user , enrolledCourses, enrollInCourse, courseProgress } = useProfile();
 
   if (!user || !courseProgress) return null;
 
@@ -25,7 +23,7 @@ export function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-blue-600 to-teal-600 rounded-xl text-white p-8 mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.userName}!</h1>
           <p className="text-blue-100">Continue your technical education journey</p>
         </div>
 

@@ -4,11 +4,13 @@ import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { User, Settings, Home, BookOpen, Users, LogOut, Menu, X, UserCircle, Zap } from "lucide-react"
 import { useAuth } from "../../context/auth-context"
+import { useProfile } from "@/context/profile- context"
 
 export function Header() {
-  const { user, logout } = useAuth()
-  const location = useLocation()
-  const navigate = useNavigate()
+  const { logout } = useAuth();
+  const { profile: user } = useProfile();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
@@ -36,7 +38,7 @@ export function Header() {
 
   return (
     <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-50 shadow-2xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-auto mx-auto px-4 sm:px-5 lg:px-6">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
@@ -53,7 +55,7 @@ export function Header() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex space-x-2">
+          <nav className="hidden md:flex space-x-1">
             {publicNavItems.map((item) => (
               <Link
                 key={item.path}
@@ -85,23 +87,22 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-3 bg-slate-800/50 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-slate-700/50">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full flex items-center justify-center">
-                      
-                      {user.avatar ?  
-                   <img
-                    src={user.avatar}
-                    alt="User Avatar"
-                    className="h-8 w-8 rounded-full object-cover"
-                  />:
-                  <User className="h-4 w-4 text-blue-600" />
-                  }
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full flex items-center justify-center"> 
+                    {user.avatar ?  
+                       <img
+                        src={user.avatar}
+                        alt="User Avatar"
+                        className="h-8 w-8 rounded-full object-cover"
+                      />:
+                      <User className="h-4 w-4 text-blue-600" />
+                      }
                     </div>
-                    <span className="text-sm font-medium text-white">{user.name}</span>
+                    <span className="text-sm font-medium text-white">{user.userName}</span>
                   </div>
                   {user.role === "admin" && (
                     <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-1 rounded-full font-medium">
@@ -169,7 +170,7 @@ export function Header() {
                       <User className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <span className="text-white font-medium">{user.name}</span>
+                      <span className="text-white font-medium">{user.userName}</span>
                       {user.role === "admin" && (
                         <span className="block text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full font-medium w-fit mt-1">
                           Admin

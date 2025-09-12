@@ -1,23 +1,47 @@
 import  { useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit, Save, X } from 'lucide-react';
+import { User, Mail, Phone, Edit, Save, X } from 'lucide-react';
 import { useProfile } from '@/context/profile- context';
+import { z } from 'zod';
+
+const profileSchema = z.object({
+  userName: z.string().min(1, 'Full Name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional().or(z.literal('')).refine(
+    (val) => !val || /^\+?\d{7,15}$/.test(val),
+    { message: 'Invalid phone number' }
+  ),
+  address: z.string().optional(),
+});
+
 
 export function ProfilePage() {
-  const { profile: user } = useProfile();
+  const { profile: user, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.userName || '',
+    userName: user?.userName || '',
     email: user?.email || '',
-    phone: '',
-    address: '',
-    bio: ''
+    phone: user?.phone,
+    linkedin: user?.socialLinks?.github || '',
+    github:  user?.socialLinks?.github || '',
+    twitter: user?.socialLinks?.github || '',
   });
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   if (!user) return null;
 
   const handleSave = () => {
-    // In a real app, this would update the user profile
-    console.log('Saving profile:', formData);
+    const result = profileSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: { [key: string]: string } = {};
+      result.error.issues.forEach((err) => {
+        if (typeof err.path[0] === 'string') fieldErrors[err.path[0]] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+    updateProfile(formData);
     setIsEditing(false);
   };
 
@@ -67,6 +91,7 @@ export function ProfilePage() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Personal Information</h2>
                 <div className="space-y-4">
+                  {/* Full Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name
@@ -74,8 +99,8 @@ export function ProfilePage() {
                     {isEditing ? (
                       <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.userName}
+                        onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     ) : (
@@ -85,7 +110,7 @@ export function ProfilePage() {
                       </div>
                     )}
                   </div>
-
+                  {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
@@ -104,7 +129,7 @@ export function ProfilePage() {
                       </div>
                     )}
                   </div>
-
+                  {/* Phone */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number
@@ -124,23 +149,60 @@ export function ProfilePage() {
                       </div>
                     )}
                   </div>
-
+                  {/* LinkedIn */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address
+                      LinkedIn
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        value={formData.linkedin}
+                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your address"
+                        placeholder="LinkedIn profile URL"
                       />
                     ) : (
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <MapPin className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-900">{formData.address || 'Not provided'}</span>
+                        <span className="text-gray-900">{formData.linkedin || 'Not provided'}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* GitHub */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      GitHub
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.github}
+                        onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="GitHub profile URL"
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-900">{formData.github || 'Not provided'}</span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Twitter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Twitter
+                    </label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={formData.twitter}
+                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Twitter profile URL"
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-900">{formData.twitter || 'Not provided'}</span>
                       </div>
                     )}
                   </div>
@@ -175,26 +237,6 @@ export function ProfilePage() {
                     <h3 className="font-semibold text-orange-900">Account Type</h3>
                     <p className="text-lg font-semibold text-orange-600 capitalize">{user.role}</p>
                   </div>
-                </div>
-
-                {/* Bio Section */}
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Bio</h3>
-                  {isEditing ? (
-                    <textarea
-                      rows={4}
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Tell us about yourself..."
-                    />
-                  ) : (
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-700">
-                        {formData.bio || 'No bio provided yet. Click edit to add your bio.'}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

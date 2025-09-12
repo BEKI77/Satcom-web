@@ -31,6 +31,7 @@ interface ProfileContextType {
   profile: Profile | null;
   loading: boolean;
   enrolledCourses: string[];
+  updateProfile : (data:any) => Promise<void>;
   enrollInCourse: (courseId: string) => Promise<void>;
   courseProgress: ()=> Promise<Record<string, number> | null>;
   updateProgress: (courseId: string, progress: number) => Promise<void>;
@@ -53,15 +54,14 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       setEnrolledCourses([]);
       return;
     }
+
     setLoading(true);
-    // Fetch profile
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    console.log(profileData);
     if (profileError && profileError.code==='PGRST116') {
       // Insert new profile
       const { error: insertError } = await supabase
@@ -73,6 +73,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           avatar: user.avatar,
           enrollmentDate: new Date().toISOString(),
         }]);
+
       if (insertError) {
         console.error('Error inserting new profile:', insertError.message);
         setProfile(null);
@@ -81,7 +82,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           id: user.id,
           userName: user.name,
           email: user.email,
-          role: user.email.includes('admin') ? 'admin' : 'student',
+          role:'student',
           avatar: user.avatar,
           enrollmentDate: new Date().toISOString(),
           completedCourses: [],
@@ -93,24 +94,58 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
           phone: '',
         });
       }
+
     } else if (profileError) {
       console.error('Error fetching profile:', profileError.message);
       setProfile(null);
+      
     } else {
       setProfile(profileData);
     }
 
-    // Fetch enrolled courses
-    const { data: enrollments, error: enrollmentsError } = await supabase
-      .from('enrollments')
-      .select('course_id')
-      .eq('user_id', user.id);
 
-    if (enrollmentsError) {
-      console.error('Error fetching enrollments:', enrollmentsError.message);
-      setEnrolledCourses([]);
+    // Fetch enrolled courses
+    // const { data: enrollments, error: enrollmentsError } = await supabase
+    //   .from('enrollments')
+    //   .select('course_id')
+    //   .eq('user_id', user.id);
+
+    // if (enrollmentsError) {
+    //   console.error('Error fetching enrollments:', enrollmentsError.message);
+    //   setEnrolledCourses([]);
+    // } else {
+    //   setEnrolledCourses(enrollments.map((e: any) => e.course_id));
+    // }
+    setLoading(false);
+  };
+
+  const updateProfile = async (formData:any) => {
+    if (!user) return;
+    setLoading(true);
+
+    const updates: Record<string, any> = {
+      userName: formData.userName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      socialLinks: {
+        linkedin: formData.linkedin,
+        github: formData.github,
+        twitter: formData.twitter,
+      },
+      id: user.id,
+    };
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Error updating profile:', error.message);
     } else {
-      setEnrolledCourses(enrollments.map((e: any) => e.course_id));
+      // Refresh profile after update
+      await fetchProfile();
     }
     setLoading(false);
   };
@@ -167,7 +202,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ProfileContext.Provider value={{ 
-        profile, 
+        profile,
+        updateProfile,
         loading, 
         enrolledCourses, 
         enrollInCourse, 
