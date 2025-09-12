@@ -1,11 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useAuth } from './auth-context';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_SECRET_KEY
-);
+import { supabase } from '@/lib/lib';
 
 interface Profile {
   id: string;
@@ -105,17 +100,17 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
 
     // Fetch enrolled courses
-    // const { data: enrollments, error: enrollmentsError } = await supabase
-    //   .from('enrollments')
-    //   .select('course_id')
-    //   .eq('user_id', user.id);
+    const { data: enrollments, error: enrollmentsError } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .eq('user_id', user.id);
 
-    // if (enrollmentsError) {
-    //   console.error('Error fetching enrollments:', enrollmentsError.message);
-    //   setEnrolledCourses([]);
-    // } else {
-    //   setEnrolledCourses(enrollments.map((e: any) => e.course_id));
-    // }
+    if (enrollmentsError) {
+      console.error('Error fetching enrollments:', enrollmentsError.message);
+      setEnrolledCourses([]);
+    } else {
+      setEnrolledCourses(enrollments.map((e: any) => e.course_id));
+    }
     setLoading(false);
   };
 
@@ -144,7 +139,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (error) {
       console.error('Error updating profile:', error.message);
     } else {
-      // Refresh profile after update
       await fetchProfile();
     }
     setLoading(false);
@@ -152,6 +146,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const enrollInCourse = async (courseId: string) => {
     if (!user) return;
+    
     const { error } = await supabase
       .from('enrollments')
       .insert([{ user_id: user.id, course_id: courseId }]);
@@ -164,8 +159,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const courseProgress = async (): Promise<Record<string, number>> => {
     if (!user) return {};
+
     const { data, error } = await supabase
-      .from('course_progress')
+      .from('enrollments')
       .select('course_id, progress')
       .eq('user_id', user.id);
 
@@ -184,15 +180,17 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
    const updateProgress = async (courseId: string, progress: number) => {
-    if (!user) return;
-    const { error } = await supabase
-      .from('course_progress')
-      .upsert([
-        { user_id: user.id, course_id: courseId, progress }
-      ], { onConflict: 'user_id,course_id' });
-    if (error) {
-      console.error('Error updating course progress:', error.message);
-    }
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('enrollments')
+        .update({ progress })
+        .eq('user_id', user.id)
+        .eq('course_id', courseId);
+
+      if (error) {
+        console.error('Error updating course progress:', error.message);
+      }
   };
 
   useEffect(() => {

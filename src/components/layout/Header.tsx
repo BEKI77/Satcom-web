@@ -55,7 +55,7 @@ export function Header() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex space-x-1">
+          <nav className="hidden md:flex mx-auto space-x-1">
             {publicNavItems.map((item) => (
               <Link
                 key={item.path}
@@ -119,18 +119,12 @@ export function Header() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  to="/login"
-                  className="text-slate-300 hover:text-white font-medium transition-colors px-4 py-2 rounded-lg hover:bg-slate-700/50"
-                >
-                  Login
-                </Link>
+              <div className="flex items-center space-x-3"> 
                 <Link
                   to="/register"
                   className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-medium hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                 >
-                  Register
+                  Login
                 </Link>
               </div>
             )}

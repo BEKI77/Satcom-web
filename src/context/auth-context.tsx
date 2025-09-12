@@ -73,10 +73,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if(error) {
       console.error(error.message);
+      throw new Error(error.message);
     } else{
-      console.log("Sign in successfull: ", data);
+      // console.log("Sign in successfull: ", data);
       const supaUser = data.user;
-    //   console.log(supaUser)
       const email = supaUser.email ?? '';
       const name = supaUser.user_metadata.full_name ?? email.split('@')[0];
       const role = email.includes('admin') ? 'admin' : 'student';
@@ -102,7 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if(error) {
-      console.error(error.message);
+      // console.error(error.message);
+      throw new Error(error.message);
     } else {
       console.log('Sign up successful: ', data)
     }

@@ -1,18 +1,45 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Star, BookOpen, Play, FileText, CheckCircle, Award } from 'lucide-react';
-import { courses, departments } from '../data';
+import { departments } from '../data';
 import { useAuth } from '@/context/auth-context';
 import { useProfile } from '@/context/profile- context';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/lib';
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const {enrolledCourses, enrollInCourse} = useProfile();
+  const { enrolledCourses, enrollInCourse } = useProfile();
 
-  const course = courses.find(c => c.id === id);
+  // Fetch course from Supabase
+  const [course, setCourse] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    supabase
+      .from('courses')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(({ data }) => {
+        setCourse(data || null);
+        setLoading(false);
+      });
+  }, [id]);
+
   const department = course ? departments.find(d => d.id === course.departmentId) : null;
   const isEnrolled = course ? enrolledCourses.includes(course.id) : false;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <span className="text-lg text-gray-600">Loading course...</span>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -29,7 +56,6 @@ export function CourseDetailPage() {
 
   const handleEnroll = () => {
     if (!user) {
-      navigate('/login');
       return;
     }
     enrollInCourse(course.id);
@@ -127,7 +153,7 @@ export function CourseDetailPage() {
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Content</h2>
               <div className="space-y-4">
-                {course.modules.map((module, index) => {
+                {course.modules.map((module: any, index: number) => {
                   const IconComponent = getModuleIcon(module.type);
                   return (
                     <div key={module.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">

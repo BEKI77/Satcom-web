@@ -1,20 +1,48 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, Award, TrendingUp, Play, Users, Star } from 'lucide-react';
-import { courses } from '../data';
 import { useProfile } from '@/context/profile- context';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/lib';
 
 export function DashboardPage() {
-  const {profile: user , enrolledCourses, enrollInCourse, courseProgress } = useProfile();
+  const { profile: user, enrolledCourses, enrollInCourse, courseProgress } = useProfile();
 
-  if (!user || !courseProgress) return null;
+  // Fetch courses from Supabase
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [progressObj, setProgressObj] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from('courses')
+      .select('*')
+      .then(({ data, error }) => {
+        if (!error) setCourses(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    async function fetchProgress() {
+      if (typeof courseProgress === 'function') {
+        const progressData = await courseProgress();
+        setProgressObj(progressData || {});
+      } else if (courseProgress) {
+        setProgressObj(courseProgress);
+      }
+    }
+    fetchProgress();
+  }, [courseProgress]);
+
+  if (!user || !courseProgress || loading) return null;
 
   // Call courseProgress if it's a function
-  const progressObj: Record<string, number> = typeof courseProgress === 'function' ? {} : courseProgress;
 
   const enrolledCourseObjects = courses.filter(course => enrolledCourses.includes(course.id));
   const availableCourses = courses.filter(course => !enrolledCourses.includes(course.id));
   const completedCourses = enrolledCourses.filter(courseId => progressObj && progressObj[courseId] >= 100);
-  const totalProgress = enrolledCourses.length > 0 
+  const totalProgress = enrolledCourses.length > 0
     ? Math.round(enrolledCourses.reduce((sum, courseId) => sum + ((progressObj && progressObj[courseId]) || 0), 0) / enrolledCourses.length)
     : 0;
 

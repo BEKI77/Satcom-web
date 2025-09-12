@@ -45,7 +45,17 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading }: Custom
         await onSignUp(email, password)
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred")
+       if (
+        err?.message?.toLowerCase().includes("invalid") ||
+        err?.message?.toLowerCase().includes("wrong") ||
+        err?.code === 401 ||
+        err?.code === 403
+      ) {
+        setError("Invalid email or password")
+      } else {
+        setError(err.message || "An error occurred")
+      }
+      setPassword('');
     }
   }
 
@@ -101,7 +111,7 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading }: Custom
 
             {/* Error Message */}
             {error && (
-              <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-md">
+              <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
                 {error}
               </div>
             )}

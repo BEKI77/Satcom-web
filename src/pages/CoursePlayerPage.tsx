@@ -1,21 +1,41 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, FileText, CheckCircle, Clock, User, ChevronLeft, ChevronRight } from 'lucide-react';
-import { courses } from '../data';
 import { useProfile } from '@/context/profile- context';
+import { supabase } from '@/lib/lib';
 
 export function CoursePlayerPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { courseProgress, updateProgress } = useProfile();
-  
+
+  const [course, setCourse] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [progress, setProgress] = useState<number>(0);
 
-  const course = courses.find(c => c.id === courseId);
-  
-  React.useEffect(() => {
+
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  // Fetch course from Supabase
+  useEffect(() => {
+    if (!courseId) return;
+    setLoading(true);
+    supabase
+      .from('courses')
+      .select('*')
+      .eq('id', courseId)
+      .single()
+      .then(({ data }) => {
+        console.log(data)
+        setCourse(data || null);
+        setLoading(false);
+      });
+  }, [courseId]);
+
+  // Fetch progress
+  useEffect(() => {
     async function fetchProgress() {
       if (course && courseProgress) {
         const progressData = await courseProgress();
@@ -25,6 +45,14 @@ export function CoursePlayerPage() {
     fetchProgress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course, courseProgress]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <span className="text-lg text-gray-600">Loading course...</span>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -50,7 +78,7 @@ export function CoursePlayerPage() {
     if (!completedModules.includes(moduleId)) {
       const newCompleted = [...completedModules, moduleId];
       setCompletedModules(newCompleted);
-      
+
       const newProgress = (newCompleted.length / totalModules) * 100;
       updateProgress(course.id, newProgress);
     }
@@ -71,28 +99,62 @@ export function CoursePlayerPage() {
   const renderModuleContent = (module: any) => {
     switch (module.type) {
       case 'video':
-        return (
-          <div className="space-y-6">
-            <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center">
-              <div className="text-center text-white">
-                <Play className="h-16 w-16 mx-auto mb-4 text-blue-400" />
-                <h3 className="text-xl font-semibold mb-2">{module.title}</h3>
-                <p className="text-gray-300 mb-4">{module.content}</p>
-                {module.duration && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-600">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {module.duration}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h4 className="text-lg font-semibold mb-3">Module Description</h4>
-              <p className="text-gray-600">{module.content}</p>
-            </div>
+        const isYouTube = typeof module.video_url === 'string' && /youtu\.?be/.test(module.video_url);
+  let embedUrl = '';
+  if (isYouTube) {
+    const match = module.video_url.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    );
+    const videoId = match ? match[1] : null;
+    embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : '';
+  }
+  const hasVideo = isYouTube && embedUrl;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center relative">
+        {hasVideo && isVideoPlaying && (
+          <iframe
+            src={embedUrl}
+            title={module.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full rounded-lg"
+          />
+        )}
+        {hasVideo && !isVideoPlaying && (
+          <button
+            className="absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-black bg-opacity-60 rounded-lg z-10"
+            onClick={() => setIsVideoPlaying(true)}
+          >
+            <Play className="h-16 w-16 mx-auto mb-4 text-blue-400" />
+            <span className="text-white text-lg font-semibold">Play Video</span>
+          </button>
+        )}
+        {/* Overlay with title, description, duration */}
+        {(!isVideoPlaying) && (
+          <div className="text-center text-white absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <h3 className="text-xl font-semibold mb-2">{module.title}</h3>
+            <p className="text-gray-300 mb-4">{module.content}</p>
+            {module.duration && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-600">
+                <Clock className="h-4 w-4 mr-1" />
+                {module.duration}
+              </span>
+            )}
           </div>
-        );
-      
+        )}
+        {!hasVideo && (
+          <div className="text-white text-center w-full">No video available for this module.</div>
+        )}
+      </div>
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h4 className="text-lg font-semibold mb-3">Module Description</h4>
+        <p className="text-gray-600">{module.content}</p>
+      </div>
+    </div>
+  );
+
       case 'text':
         return (
           <div className="bg-white rounded-lg shadow-md p-8">
@@ -102,7 +164,7 @@ export function CoursePlayerPage() {
             </div>
             <div className="prose max-w-none">
               <p className="text-gray-700 text-lg leading-relaxed mb-6">{module.content}</p>
-              
+
               <div className="bg-blue-50 border-l-4 border-blue-400 p-6 my-6">
                 <h4 className="text-lg font-semibold text-blue-900 mb-2">Key Learning Points</h4>
                 <ul className="text-blue-800 space-y-2">
@@ -112,18 +174,18 @@ export function CoursePlayerPage() {
                   <li>• Troubleshooting common issues</li>
                 </ul>
               </div>
-              
+
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
                 <h4 className="text-lg font-semibold text-yellow-800 mb-2">💡 Pro Tip</h4>
                 <p className="text-yellow-700">
-                  Take notes while studying and practice the concepts in a real-world scenario when possible. 
+                  Take notes while studying and practice the concepts in a real-world scenario when possible.
                   This will help reinforce your learning and improve retention.
                 </p>
               </div>
             </div>
           </div>
         );
-      
+
       case 'quiz':
         return (
           <div className="bg-white rounded-lg shadow-md p-8">
@@ -143,7 +205,7 @@ export function CoursePlayerPage() {
             </div>
           </div>
         );
-      
+
       default:
         return <div>Unknown module type</div>;
     }
@@ -208,7 +270,7 @@ export function CoursePlayerPage() {
 
               <div className="space-y-2">
                 <h4 className="font-semibold text-gray-900 mb-4">Course Modules</h4>
-                {course.modules.map((module, index) => (
+                {course.modules.map((module: any, index: number) => (
                   <button
                     key={module.id}
                     onClick={() => setCurrentModuleIndex(index)}
@@ -273,7 +335,7 @@ export function CoursePlayerPage() {
                       <span>Mark Complete</span>
                     </button>
                   )}
-                  
+
                   <button
                     onClick={handleNextModule}
                     disabled={currentModuleIndex === totalModules - 1}
@@ -290,4 +352,5 @@ export function CoursePlayerPage() {
       </div>
     </div>
   );
+
 }

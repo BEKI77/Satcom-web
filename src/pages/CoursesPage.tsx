@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, Clock, Users, Star, BookOpen } from 'lucide-react';
-import { courses, departments } from '../data';
+import { departments } from '../data';
 import { useAuth } from '../context/auth-context';
 import { useProfile } from '@/context/profile- context';
+import { supabase } from '@/lib/lib';
 
 export function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,14 +13,29 @@ export function CoursesPage() {
   const { user } = useAuth();
   const { enrolledCourses, enrollInCourse } = useProfile();
 
+  // New state for fetched courses
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from('courses')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        else setCourses(data || []);
+        setLoading(false);
+      });
+  }, []);
+
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesDepartment = selectedDepartment === 'all' || course.departmentId === selectedDepartment;
     const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
-    
     return matchesSearch && matchesDepartment && matchesLevel;
   });
 
@@ -28,6 +44,22 @@ export function CoursesPage() {
       enrollInCourse(courseId);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-lg text-gray-600">Loading courses...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-lg text-red-600">Error: {error}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

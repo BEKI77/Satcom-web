@@ -1,9 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Users, BookOpen, BarChart3, Settings } from 'lucide-react';
-import { courses, departments } from '../data';
+// Remove static import of courses
+// import { courses, departments } from '../data';
+import { departments } from '../data';
+import { supabase } from '@/lib/lib';
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'users' | 'settings'>('overview');
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from('courses')
+      .select('*')
+      .then(({ data, error }) => {
+        if (!error) setCourses(data || []);
+        setLoading(false);
+      });
+  }, []);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Users, Award, CheckCircle } from 'lucide-react';
 import { departments } from '../data';
 import * as Icons from 'lucide-react';
+import { ChalkboardLearningCard } from '@/components/ui/chalkboard';
 
 export function HomePage() {
   const features = [
@@ -36,7 +37,7 @@ export function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  to="/register"
+                  to="/"
                   className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-all transform hover:scale-105"
                 >
                   <span>Start Learning Today</span>
@@ -75,27 +76,7 @@ export function HomePage() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="bg-white rounded-xl shadow-2xl p-8 transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                <img
-                  src="https://images.pexels.com/photos/3862132/pexels-photo-3862132.jpeg?auto=compress&cs=tinysrgb&w=600"
-                  alt="Technical Training"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <div className="mt-6">
-                  <h3 className="text-xl font-bold text-gray-900">Hands-On Learning</h3>
-                  <p className="text-gray-600 mt-2">
-                    State-of-the-art labs with real equipment for practical experience
-                  </p>
-                  <div className="flex items-center mt-4 space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                    <span className="text-sm text-gray-500 ml-2">Excellent Training</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ChalkboardLearningCard/>
           </div>
         </div>
       </section>
