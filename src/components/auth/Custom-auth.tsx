@@ -7,16 +7,17 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Eye, EyeOff, Mail, Lock, Chrome } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
 
 interface CustomAuthProps {
   onLogin: (email: string, password: string) => Promise<void>
   onSignUp: (email: string, password: string) => Promise<void>
   onGoogleLogin: () => Promise<void>
   loading: boolean
-  onClose?: ()=> void
 }
 
-export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose }: CustomAuthProps) {
+export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading }: CustomAuthProps) {
+  const { closeAuthDialog } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -81,16 +82,14 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose 
     <div className="fixed inset-0 bg-transparent/25 flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-xl font-bold z-10"
-              aria-label="Close authentication dialog"
-            >
-              ×
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={closeAuthDialog}
+            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-xl font-bold z-10"
+           
+          >
+            ×
+          </button>
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold text-balance">
               {isLogin ? "Welcome back" : "Create your account"}
@@ -100,7 +99,6 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Google Sign In Button */}
             <Button
               variant="outline"
               className="w-full h-11 border-border hover:bg-muted/50 transition-colors bg-transparent"
@@ -120,14 +118,14 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose 
               </div>
             </div>
 
-            {/* Error Message */}
+
             {error && (
               <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
                 {error}
               </div>
             )}
 
-            {/* Auth Form */}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -217,7 +215,6 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose 
               </Button>
             </form>
 
-            {/* Toggle between login and signup */}
             <div className="text-center">
               <button
                 type="button"

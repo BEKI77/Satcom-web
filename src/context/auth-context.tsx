@@ -1,11 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createClient, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { CustomAuth } from '@/components/auth/Custom-auth';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_SECRET_KEY
-);
+import { supabase } from '@/lib/lib';
 
 interface User {
   id: string;
@@ -23,6 +19,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   toggleAuthDialog: () => void;
+  closeAuthDialog: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -121,25 +118,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signInWithOAuth({ provider: 'google' });
   };
 
-  const toggleAuthDialog = () => {
-    setShowAuthDialog(!showAuthDialog);
-  }
+  const closeAuthDialog = () => setShowAuthDialog(false);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signUp ,logout, loginWithGoogle, toggleAuthDialog }}>
-      {loading ? (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 text-center">
-            Loading...
-          </div>
-        </div>
-      ) : !user && showAuthDialog ? (
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      signUp, 
+      logout, 
+      loginWithGoogle, toggleAuthDialog: () => setShowAuthDialog((prev) => !prev), 
+      closeAuthDialog 
+  }}>
+      {!user && showAuthDialog ? (
         <CustomAuth 
           onLogin={login} 
           onSignUp={signUp} 
           onGoogleLogin={loginWithGoogle} 
           loading={loading} 
-          onClose={toggleAuthDialog}/>
+        />
       ) : null}
       {children}
     </AuthContext.Provider>

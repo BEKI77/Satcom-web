@@ -183,20 +183,15 @@ export function Header() {
                 </div>
               ) : (
                 <div className="space-y-2 pt-4 border-t border-slate-700/50">
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                  <Button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      toggleAuthDialog()
+                    }}
                     className="block px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200"
                   >
                     Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 rounded-xl text-base font-medium bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-lg shadow-blue-500/25"
-                  >
-                    Register
-                  </Link>
+                  </Button>
                 </div>
               )}
             </div>

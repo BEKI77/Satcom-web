@@ -5,11 +5,12 @@ import { useAuth } from '@/context/auth-context';
 import { useProfile } from '@/context/profile- context';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/lib';
+import { Button } from '@/components/ui/button';
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, toggleAuthDialog } = useAuth();
   const { enrolledCourses, enrollInCourse } = useProfile();
 
   const [course, setCourse] = useState<any | null>(null);
@@ -235,14 +236,14 @@ export function CourseDetailPage() {
                 )
               ) : (
                 <div className="space-y-3">
-                  <Link
-                    to="/register"
+                  <Button
+                    onClick={()=> toggleAuthDialog()}
                     className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block"
                   >
                     Register to Enroll
-                  </Link>
+                  </Button>
                   <Link
-                    to="/login"
+                    to=""
                     className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-center block"
                   >
                     Already have an account?
