@@ -5,9 +5,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { User, Settings, Home, BookOpen, Users, LogOut, Menu, X, UserCircle, Zap } from "lucide-react"
 import { useAuth } from "../../context/auth-context"
 import { useProfile } from "@/context/profile- context"
+import { Button } from "../ui/button"
 
 export function Header() {
-  const { logout } = useAuth();
+  const { logout, toggleAuthDialog  } = useAuth();
   const { profile: user } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
@@ -120,12 +121,12 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center space-x-3"> 
-                <Link
-                  to="/register"
+                <Button
+                  onClick={() => toggleAuthDialog()}
                   className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-medium hover:from-blue-700 hover:to-cyan-600 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                 >
                   Login
-                </Link>
+                </Button>
               </div>
             )}
           </div>

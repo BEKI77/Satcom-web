@@ -12,7 +12,6 @@ export function CourseDetailPage() {
   const { user } = useAuth();
   const { enrolledCourses, enrollInCourse } = useProfile();
 
-  // Fetch course from Supabase
   const [course, setCourse] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 

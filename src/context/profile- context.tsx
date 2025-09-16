@@ -146,14 +146,59 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const enrollInCourse = async (courseId: string) => {
     if (!user) return;
-    
-    const { error } = await supabase
-      .from('enrollments')
-      .insert([{ user_id: user.id, course_id: courseId }]);
-    if (error) {
-      console.error('Error enrolling in course:', error.message);
-    } else {
-      setEnrolledCourses(prev => [...prev, courseId]);
+
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", import.meta.env.VITE_CHAPA_SECRET_KEY);
+    myHeaders.append("Content-Type", "application/json");
+
+    const { data, error: courseError } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('id', courseId)
+    .single();
+
+    console.log(data)
+
+    if (courseError || !data) {
+      console.error('Error fetching course:', courseError?.message);
+      return;
+    }
+   
+    const paymentData = {
+      amount: data.price,
+      currency: "ETB",
+      email: user.email,
+      first_name: user.name?.split(' ')[0] || user.name || "FirstName",
+      last_name: user.name?.split(' ')[1] || "LastName",
+      phone_number: profile?.phone || "0912345678",
+      tx_ref: `tx-${user.id.slice(0,8)}-${data.id}-${Date.now()}`.slice(0, 50),
+      callback_url: `${import.meta.env.VITE_FRONTEND_URL}/payment/callback`,
+      return_url: `${window.location.origin}/courses/${data.id}`,
+      "customization[title]": `Payment for ${data.title}`,
+      "customization[description]": `Enroll in ${data.title}`,
+      "meta[hide_receipt]": "true"
+    };
+
+
+    var requestOptions: RequestInit = {
+      method: 'POST',
+      headers: myHeaders,
+      body: JSON.stringify(paymentData),
+      redirect: 'follow' as RequestRedirect
+    };
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/chapa/initialize`, requestOptions);
+      const result = await response.json();
+
+      if (result.status === "success" && result.data?.checkout_url) {
+        window.location.href = result.data.checkout_url;
+        return; // Stop further execution
+      } else {
+        console.error('Chapa payment initialization failed:', result);
+      }
+    } catch (error) {
+      console.error('Error initializing payment:', error);
     }
   };
 

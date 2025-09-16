@@ -16,6 +16,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProfileProvider } from './context/profile- context';
+import PaymentCallback from './components/payment/payment-verification';
 
 function App() {
   return (
@@ -41,11 +42,19 @@ function App() {
                   <DashboardPage />
                 </ProtectedRoute>
               } />
+              
               <Route path="/learn/:courseId" element={
                 <ProtectedRoute>
                   <CoursePlayerPage />
                 </ProtectedRoute>
               } />
+
+              <Route path="/payment/callback" element={
+               
+                  <PaymentCallback />
+               
+              } />
+              
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <ProfilePage />

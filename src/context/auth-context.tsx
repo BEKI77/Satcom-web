@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (email:string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  toggleAuthDialog: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAuthDialog, setShowAuthDialog] = useState<boolean>(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -75,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error(error.message);
       throw new Error(error.message);
     } else{
-      // console.log("Sign in successfull: ", data);
+      console.log("Sign in successfull: ", data);
       const supaUser = data.user;
       const email = supaUser.email ?? '';
       const name = supaUser.user_metadata.full_name ?? email.split('@')[0];
@@ -119,17 +121,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signInWithOAuth({ provider: 'google' });
   };
 
+  const toggleAuthDialog = () => {
+    setShowAuthDialog(!showAuthDialog);
+  }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signUp ,logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, login, signUp ,logout, loginWithGoogle, toggleAuthDialog }}>
       {loading ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 text-center">
             Loading...
           </div>
         </div>
-      ) : !user ? (
-        <CustomAuth onLogin={login} onSignUp={signUp} onGoogleLogin={loginWithGoogle} loading={loading} />
+      ) : !user && showAuthDialog ? (
+        <CustomAuth 
+          onLogin={login} 
+          onSignUp={signUp} 
+          onGoogleLogin={loginWithGoogle} 
+          loading={loading} 
+          onClose={toggleAuthDialog}/>
       ) : null}
       {children}
     </AuthContext.Provider>

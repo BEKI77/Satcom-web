@@ -34,9 +34,9 @@ export function CoursesPage() {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || course.departmentId === selectedDepartment;
     const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
-    return matchesSearch && matchesDepartment && matchesLevel;
+    
+    return matchesSearch && matchesLevel;
   });
 
   const handleEnroll = (courseId: string) => {

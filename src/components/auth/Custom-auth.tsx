@@ -13,9 +13,10 @@ interface CustomAuthProps {
   onSignUp: (email: string, password: string) => Promise<void>
   onGoogleLogin: () => Promise<void>
   loading: boolean
+  onClose?: ()=> void
 }
 
-export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading }: CustomAuthProps) {
+export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading, onClose }: CustomAuthProps) {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -80,6 +81,16 @@ export function CustomAuth({ onLogin, onSignUp, onGoogleLogin, loading }: Custom
     <div className="fixed inset-0 bg-transparent/25 flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-xl font-bold z-10"
+              aria-label="Close authentication dialog"
+            >
+              ×
+            </button>
+          )}
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold text-balance">
               {isLogin ? "Welcome back" : "Create your account"}

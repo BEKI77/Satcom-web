@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Users, BookOpen, BarChart3, Settings } from 'lucide-react';
-// Remove static import of courses
-// import { courses, departments } from '../data';
-import { departments } from '../data';
+import { toast } from 'react-hot-toast';
 import { supabase } from '@/lib/lib';
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'users' | 'settings'>('overview');
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+
+  // Course edit/create modal state
+  const [showCourseModal, setShowCourseModal] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any | null>(null);
+
+  // Admin creation modal state
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -20,6 +32,102 @@ export function AdminPage() {
         setLoading(false);
       });
   }, []);
+
+   // Fetch users
+  useEffect(() => {
+    setUsersLoading(true);
+    supabase
+      .from('profiles')
+      .select('*')
+      .then(({ data, error }) => {
+        if (!error) setUsers(data || []);
+        setUsersLoading(false);
+      });
+  }, []);
+
+  // Course CRUD handlers
+  const handleEditCourse = (course: any) => {
+    setEditingCourse(course);
+    setShowCourseModal(true);
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    const { error } = await supabase.from('courses').delete().eq('id', id);
+    if (!error) {
+      setCourses(courses.filter((c) => c.id !== id));
+      toast.success('Course deleted');
+    } else {
+      toast.error('Failed to delete course');
+    }
+  };
+
+  const handleSaveCourse = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const courseData = Object.fromEntries(formData.entries());
+
+    if (editingCourse) {
+      // Update
+      const { error, data } = await supabase
+        .from('courses')
+        .update(courseData)
+        .eq('id', editingCourse.id)
+        .select();
+      if (!error) {
+        setCourses((prev) =>
+          prev.map((c) => (c.id === editingCourse.id ? { ...c, ...courseData } : c))
+        );
+        toast.success('Course updated');
+      } else {
+        toast.error('Failed to update course');
+      }
+    } else {
+      // Create
+      const { error, data } = await supabase
+        .from('courses')
+        .insert([courseData])
+        .select();
+      if (!error && data) {
+        setCourses((prev) => [...prev, data[0]]);
+        toast.success('Course created');
+      } else {
+        toast.error('Failed to create course');
+      }
+    }
+    setShowCourseModal(false);
+    setEditingCourse(null);
+  };
+
+  const handleCreateAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAdminLoading(true);
+    // Sign up new user
+    const { data, error } = await supabase.auth.signUp({
+      email: adminEmail,
+      password: adminPassword,
+      options: {
+        data: { name: adminName, role: 'Admin' },
+      },
+    });
+
+    // update this function!!
+
+    if (!error) {
+      toast.success('Admin account created');
+      setShowAdminModal(false);
+      setAdminEmail('');
+      setAdminPassword('');
+      setAdminName('');
+      // Optionally, refresh users list
+      const { data: usersData } = await supabase.from('profiles').select('*');
+      setUsers(usersData || []);
+    } else {
+      toast.error(error.message || 'Failed to create admin');
+    }
+    setAdminLoading(false);
+  };
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -101,10 +209,16 @@ export function AdminPage() {
   );
 
   const renderCourses = () => (
-    <div className="space-y-6">
+   <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Course Management</h3>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          onClick={() => {
+            setEditingCourse(null);
+            setShowCourseModal(true);
+          }}
+        >
           <Plus className="h-4 w-4" />
           <span>Add Course</span>
         </button>
@@ -135,9 +249,7 @@ export function AdminPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {departments.find(d => d.id === course.departmentId)?.name || 'Unknown'}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{course.departmentId}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{course.instructor}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {Math.floor(Math.random() * 100) + 20} enrolled
@@ -148,10 +260,10 @@ export function AdminPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button className="text-blue-600 hover:text-blue-900">
+                    <button className="text-blue-600 hover:text-blue-900" onClick={() => handleEditCourse(course)}>
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteCourse(course.id)}>
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>
@@ -161,6 +273,76 @@ export function AdminPage() {
           </table>
         </div>
       </div>
+
+      {/* Course Modal */}
+      {showCourseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <form
+            className="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg space-y-4"
+            onSubmit={handleSaveCourse}
+          >
+            <h2 className="text-xl font-bold mb-4">{editingCourse ? 'Edit Course' : 'Add Course'}</h2>
+            <input
+              name="title"
+              defaultValue={editingCourse?.title || ''}
+              placeholder="Title"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              name="thumbnail"
+              defaultValue={editingCourse?.thumbnail || ''}
+              placeholder="Thumbnail URL"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              name="departmentId"
+              defaultValue={editingCourse?.departmentId || ''}
+              placeholder="Department ID"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              name="instructor"
+              defaultValue={editingCourse?.instructor || ''}
+              placeholder="Instructor"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              name="price"
+              type="number"
+              defaultValue={editingCourse?.price || ''}
+              placeholder="Price"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <textarea
+              name="description"
+              defaultValue={editingCourse?.description || ''}
+              placeholder="Description"
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => {
+                  setShowCourseModal(false);
+                  setEditingCourse(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 
@@ -168,63 +350,98 @@ export function AdminPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          onClick={() => setShowAdminModal(true)}
+        >
           <Plus className="h-4 w-4" />
-          <span>Add User</span>
+          <span>Add Admin</span>
         </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-blue-900">Total Students</h4>
-            <p className="text-2xl font-bold text-blue-600">2,847</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-green-900">Active This Month</h4>
-            <p className="text-2xl font-bold text-green-600">1,923</p>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <h4 className="font-semibold text-orange-900">New Registrations</h4>
-            <p className="text-2xl font-bold text-orange-600">142</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            { name: 'Ahmed Hassan', email: 'ahmed@email.com', role: 'Student', courses: 3, joined: '2024-01-15' },
-            { name: 'Sara Mohamed', email: 'sara@email.com', role: 'Student', courses: 2, joined: '2024-01-20' },
-            { name: 'Omar Ali', email: 'omar@email.com', role: 'Instructor', courses: 5, joined: '2023-12-01' },
-            { name: 'Fatima Khaled', email: 'fatima@email.com', role: 'Student', courses: 1, joined: '2024-02-01' },
-          ].map((user, index) => (
-            <div key={index} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+        {usersLoading ? (
+          <div>Loading users...</div>
+        ) : (
+          <div className="space-y-4">
+            {users.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {user.name ? user.name.split(' ').map((n: string) => n[0]).join('') : user.email[0]}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{user.name || user.email}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{user.name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                <div className="flex items-center space-x-6">
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                    user.role === 'Admin' ? 'bg-red-100 text-red-800' :
+                    user.role === 'Instructor' ? 'bg-blue-100 text-blue-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {user.role || 'Student'}
+                  </span>
+                  <span className="text-sm text-gray-500">{user.created_at?.slice(0, 10)}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-6">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-900">{user.courses}</p>
-                  <p className="text-xs text-gray-500">Courses</p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                  user.role === 'Admin' ? 'bg-red-100 text-red-800' :
-                  user.role === 'Instructor' ? 'bg-blue-100 text-blue-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {user.role}
-                </span>
-                <span className="text-sm text-gray-500">{user.joined}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Admin Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <form
+            className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md space-y-4"
+            onSubmit={handleCreateAdmin}
+          >
+            <h2 className="text-xl font-bold mb-4">Create Admin Account</h2>
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={adminName}
+              onChange={e => setAdminName(e.target.value)}
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={adminEmail}
+              onChange={e => setAdminEmail(e.target.value)}
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={adminPassword}
+              onChange={e => setAdminPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 border rounded"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowAdminModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                disabled={adminLoading}
+              >
+                {adminLoading ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 
